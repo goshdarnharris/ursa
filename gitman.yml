@@ -1,0 +1,10 @@
+location: packages
+sources:
+  - repo: "https://github.com/fmtlib/fmt.git"
+    name: fmt
+    rev: 12.2.0
+sources_locked:
+  - 
+default_group: ''
+groups:
+  -

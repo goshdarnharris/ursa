@@ -1,0 +1,5 @@
+{
+    "clangd.arguments": [
+        "--query-driver=/nix/store/*/bin/*gcc*,/nix/store/*/bin/*g++*"
+    ]
+}

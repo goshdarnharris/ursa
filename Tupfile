@@ -1,0 +1,1 @@
+: main.cc |> ^j^ g++ -std=c++26 -freflection -Iinclude -Ipackages/fmt/include -fdiagnostics-color=always %f -o %o |> main

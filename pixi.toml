@@ -1,0 +1,15 @@
+[workspace]
+channels = ["conda-forge"]
+name = "test"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+#FIXME: more recent python requires some changes to roast; ast.Num no longer exists
+python = ">=3.8.0,<3.9"
+typer = ">=0.12.5,<0.13"
+
+[pypi-dependencies]
+gitman = ">=3.1, <4"
