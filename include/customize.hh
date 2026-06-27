@@ -1,79 +1,49 @@
 #pragma once
 
-namespace customize {
+#include <meta>
+#include <format.hh>
 
-[[deprecated]] constexpr void print_type(auto&&) {}
+namespace ursa::customize {
 
-namespace detail {
+template <typename I, typename T>
+struct customization {};
 
-    
-
-
-
-
-
-    template <auto V>
-    struct constant_value {
-        static constexpr decltype(V) value = V;
-    };
-
-    template <typename T>
-    concept constexpr_function = requires(T&& v) { constant_value<v()>{}; };
-
-    template <typename T>
-    struct function;
-
-    // template <typename T>
-    //     requires requires(T&& v) { constant_value<v()>{}; }
-    
-} //namespace detail
-
-template <auto Info>
-struct function {
-    static constexpr decltype(auto) operator()(auto&& v, auto&&... args) {
-        //use v to:
-        //  - check that it implements the interface
-        //  - look up the overload set for the function specified by Info
-        //     - how to find overloads that are declared elsewhere?
-        //     - like, if you implement an interface outside of the namespace of a type,
-        //       and opt it into the interface, it should be eligible
-        //     - consider super types that have opted into the interface
-        //  - invoke the overload set
-    }
-};
-
-
-//keep it simple to start.
-template <typename T>
-struct interface;
-
-
-
-template <typename T, typename I>
-concept implements = true;
-
-template <typename T>
-consteval auto make_interface()
+template <typename I, typename T>
+inline consteval auto opt_in()
 {
-    //need to:
-    //iterate over members of T
-    //for functions, extract:
-    //  - static or not (?)
-    //  - template, if it is one
-    //  - any attributes we can extract [[]]
-    //  - constexpr-ness? throwing? etc?
-    //  - signature
-    //  - name
-    //  - implementation, if it has one
-    //then, define interface<T> by giving it function<> members for each.
-    //function<> objects are callable, and will resolve their overload
-    //set on invocation.
+    auto context = std::meta::access_context::unchecked();
+    auto customization_scope = std::meta::parent_of(^^T);
+    auto interface_info = ^^I;
+
+    for(auto&& interface_member : std::meta::members_of(interface_info, context)) {
+        if(std::meta::is_special_member_function(interface_member) and not std::meta::is_user_declared(interface_member)) {
+            //skip compiler-generated special member functions; 
+            //if it's a customization point it must be user-declared.
+            continue;
+        }
+        bool customization_found = false;
+        for(auto customization_member : std::meta::members_of(customization_scope, context)) {
+            //FIXME: need to handle templated customizations if possible.
+            //might need to be at callsite.
+            if(std::meta::is_function(customization_member) or std::meta::is_function_template(customization_member)) {
+                for(auto annotation : std::meta::annotations_of(customization_member)) {
+                    if(std::meta::extract<std::meta::info>(annotation) == interface_member) {
+                        constexpr_print(FMT_COMPILE("Found customization for {}"), std::meta::display_string_of(interface_member));
+                        //FIXME: check any other constraints that can be handled at this
+                        //point
+                        customization_found = true;
+                        break;
+                    }
+                }
+            }
+            if(customization_found) break;
+        }
+        if(not customization_found) {
+            throw std::runtime_error(fmt::format(FMT_COMPILE("No customization found for interface member: {}"), std::meta::display_string_of(interface_member)));
+        }
+    }
+    return customization<I,T>{};
 }
-
-template <typename T>
-using interface_t = decltype(make_interface<T>());
-
-
 
 
 } //namespace customize

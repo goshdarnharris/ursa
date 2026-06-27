@@ -2,18 +2,17 @@
 
 #include <array>
 #include <format.hh>
-#include <fmt/compile.h>
 #include <meta>
 
-using namespace fmt::literals;
+// using namespace fmt::literals;
 
-constexpr auto constexpr_print_str(std::string_view msg) noexcept -> void {
-    if consteval {
-        __builtin_constexpr_diag(0, "", msg);
-    }
-}
+// constexpr auto constexpr_print_str(std::string_view msg) noexcept -> void {
+//     if consteval {
+//         __builtin_constexpr_diag(0, "", msg);
+//     }
+// }
 
-#define CONSTEXPR_PRINT(fmt, ...) constexpr_print_str(FMT_STATIC_FORMAT(fmt, __VA_ARGS__).c_str())
+// #define CONSTEXPR_PRINT(fmt, ...) constexpr_print_str(FMT_STATIC_FORMAT(fmt, __VA_ARGS__).c_str())
 
 namespace ursa {
 
@@ -41,51 +40,10 @@ namespace ursa {
 // static_assert(has_nodiscard<nodiscard_test_true>);
 
 
-template <typename T>
-void pretty_print(const T& obj) {
-    constexpr auto ctx = std::meta::access_context::unchecked();
-    constexpr auto struct_name = std::meta::display_string_of(^^T);
 
-    // consteval {
-    //     CONSTEXPR_PRINT("{}", std::meta::display_string_of(^^nodiscard_test_true));
-    // }
 
-    fmt::println("{} {{", struct_name);
-    
-    static constexpr auto members = std::define_static_array(std::meta::members_of(^^T, ctx));
-
-    static_assert(std::meta::is_destructor(^^T::~T));
-    
-    template for (constexpr auto member : members) {
-        if constexpr(std::meta::is_function(member) or std::meta::is_constructor(member) or std::meta::is_destructor(member)) {
-            
-        } else {
-
-       
-            constexpr auto member_type = std::meta::type_of(member);
-
-            if constexpr(std::meta::is_reflection_type(member_type)) {
-                fmt::println("  {} = <std::meta::info>", std::meta::display_string_of(member));
-            } else if constexpr(std::meta::has_identifier(member)) {
-                constexpr auto member_name = std::meta::identifier_of(member);
-                if constexpr(std::meta::is_function(member)) {
-                    fmt::println("  {} = <function>", member_name);
-                } else {
-                    fmt::println("  {} = {}", member_name, obj.[:member:]);
-                }
-            } else {
-                constexpr auto member_name = std::meta::display_string_of(member);
-                if constexpr(std::meta::is_function(member)) {
-                    fmt::println("  {} = <function>", member_name);
-                } else {
-                    fmt::println("  {} = {}", member_name, obj.[:member:]);
-                }
-            }
-        }
-    }
-    fmt::println("}};");
-}
-
+// template <std::meta::info T>
+// struct function_traits;
 
 template <std::meta::info T>
 struct function_traits { 
@@ -162,69 +120,69 @@ struct function_traits {
     static constexpr bool has_parent = std::meta::has_parent(function_info);
     static constexpr bool has_template_arguments = std::meta::has_template_arguments(function_info);
     
-    static constexpr bool is_void_type = std::meta::is_void_type(type_info);
-    static constexpr bool is_null_pointer_type = std::meta::is_null_pointer_type(type_info);
-    static constexpr bool is_integral_type = std::meta::is_integral_type(type_info);
-    static constexpr bool is_floating_point_type = std::meta::is_floating_point_type(type_info);
-    static constexpr bool is_array_type = std::meta::is_array_type(type_info);
-    static constexpr bool is_pointer_type = std::meta::is_pointer_type(type_info);
-    static constexpr bool is_lvalue_reference_type = std::meta::is_lvalue_reference_type(type_info);
-    static constexpr bool is_rvalue_reference_type = std::meta::is_rvalue_reference_type(type_info);
-    static constexpr bool is_member_object_pointer_type = std::meta::is_member_object_pointer_type(type_info);
-    static constexpr bool is_member_function_pointer_type = std::meta::is_member_function_pointer_type(type_info);
-    static constexpr bool is_enum_type = std::meta::is_enum_type(type_info);
-    static constexpr bool is_union_type = std::meta::is_union_type(type_info);
-    static constexpr bool is_class_type = std::meta::is_class_type(type_info);
-    static constexpr bool is_function_type = std::meta::is_function_type(type_info);
-    static constexpr bool is_reflection_type = std::meta::is_reflection_type(type_info);
-    static constexpr bool is_reference_type = std::meta::is_reference_type(type_info);
-    static constexpr bool is_arithmetic_type = std::meta::is_arithmetic_type(type_info);
-    static constexpr bool is_fundamental_type = std::meta::is_fundamental_type(type_info);
-    static constexpr bool is_object_type = std::meta::is_object_type(type_info);
-    static constexpr bool is_scalar_type = std::meta::is_scalar_type(type_info);
-    static constexpr bool is_compound_type = std::meta::is_compound_type(type_info);
-    static constexpr bool is_member_pointer_type = std::meta::is_member_pointer_type(type_info);
-    static constexpr bool is_const_type = std::meta::is_const_type(type_info);
-    static constexpr bool is_volatile_type = std::meta::is_volatile_type(type_info);
-    static constexpr bool is_trivially_copyable_type = std::meta::is_trivially_copyable_type(type_info);
-    // static constexpr bool is_trivially_relocatable_type = std::meta::is_trivially_relocatable_type(type_info);
-    // static constexpr bool is_replaceable_type = std::meta::is_replaceable_type(type_info);
-    static constexpr bool is_standard_layout_type = std::meta::is_standard_layout_type(type_info);
-    static constexpr bool is_empty_type = std::meta::is_empty_type(type_info);
-    static constexpr bool is_polymorphic_type = std::meta::is_polymorphic_type(type_info);
-    static constexpr bool is_abstract_type = std::meta::is_abstract_type(type_info);
-    static constexpr bool is_final_type = std::meta::is_final_type(type_info);
-    static constexpr bool is_aggregate_type = std::meta::is_aggregate_type(type_info);
-    // static constexpr bool is_consteval_only_type = std::meta::is_consteval_only_type(type_info);
-    static constexpr bool is_signed_type = std::meta::is_signed_type(type_info);
-    static constexpr bool is_unsigned_type = std::meta::is_unsigned_type(type_info);
-    static constexpr bool is_bounded_array_type = std::meta::is_bounded_array_type(type_info);
-    static constexpr bool is_unbounded_array_type = std::meta::is_unbounded_array_type(type_info);
-    static constexpr bool is_scoped_enum_type = std::meta::is_scoped_enum_type(type_info);
-    static constexpr bool is_default_constructible_type = std::meta::is_default_constructible_type(type_info);
-    static constexpr bool is_copy_constructible_type = std::meta::is_copy_constructible_type(type_info);
-    static constexpr bool is_move_constructible_type = std::meta::is_move_constructible_type(type_info);
-    static constexpr bool is_copy_assignable_type = std::meta::is_copy_assignable_type(type_info);
-    static constexpr bool is_move_assignable_type = std::meta::is_move_assignable_type(type_info);
-    static constexpr bool is_swappable_type = std::meta::is_swappable_type(type_info);
-    static constexpr bool is_destructible_type = std::meta::is_destructible_type(type_info);
-    static constexpr bool is_trivially_default_constructible_type = std::meta::is_trivially_default_constructible_type(type_info);
-    static constexpr bool is_trivially_copy_constructible_type = std::meta::is_trivially_copy_constructible_type(type_info);
-    static constexpr bool is_trivially_move_constructible_type = std::meta::is_trivially_move_constructible_type(type_info);
-    static constexpr bool is_trivially_copy_assignable_type = std::meta::is_trivially_copy_assignable_type(type_info);
-    static constexpr bool is_trivially_move_assignable_type = std::meta::is_trivially_move_assignable_type(type_info);
-    static constexpr bool is_trivially_destructible_type = std::meta::is_trivially_destructible_type(type_info);
-    static constexpr bool is_nothrow_default_constructible_type = std::meta::is_nothrow_default_constructible_type(type_info);
-    static constexpr bool is_nothrow_copy_constructible_type = std::meta::is_nothrow_copy_constructible_type(type_info);
-    static constexpr bool is_nothrow_move_constructible_type = std::meta::is_nothrow_move_constructible_type(type_info);
-    static constexpr bool is_nothrow_copy_assignable_type = std::meta::is_nothrow_copy_assignable_type(type_info);
-    static constexpr bool is_nothrow_move_assignable_type = std::meta::is_nothrow_move_assignable_type(type_info);
-    static constexpr bool is_nothrow_swappable_type = std::meta::is_nothrow_swappable_type(type_info);
-    static constexpr bool is_nothrow_destructible_type = std::meta::is_nothrow_destructible_type(type_info);
-    // static constexpr bool is_nothrow_relocatable_type = std::meta::is_nothrow_relocatable_type(type_info);
-    static constexpr bool is_implicit_lifetime_type = std::meta::is_implicit_lifetime_type(type_info);
-    static constexpr bool has_virtual_destructor = std::meta::has_virtual_destructor(type_info);
-    static constexpr bool has_unique_object_representations = std::meta::has_unique_object_representations(type_info);
+    // static constexpr bool is_void_type = std::meta::is_void_type(type_info);
+    // static constexpr bool is_null_pointer_type = std::meta::is_null_pointer_type(type_info);
+    // static constexpr bool is_integral_type = std::meta::is_integral_type(type_info);
+    // static constexpr bool is_floating_point_type = std::meta::is_floating_point_type(type_info);
+    // static constexpr bool is_array_type = std::meta::is_array_type(type_info);
+    // static constexpr bool is_pointer_type = std::meta::is_pointer_type(type_info);
+    // static constexpr bool is_lvalue_reference_type = std::meta::is_lvalue_reference_type(type_info);
+    // static constexpr bool is_rvalue_reference_type = std::meta::is_rvalue_reference_type(type_info);
+    // static constexpr bool is_member_object_pointer_type = std::meta::is_member_object_pointer_type(type_info);
+    // static constexpr bool is_member_function_pointer_type = std::meta::is_member_function_pointer_type(type_info);
+    // static constexpr bool is_enum_type = std::meta::is_enum_type(type_info);
+    // static constexpr bool is_union_type = std::meta::is_union_type(type_info);
+    // static constexpr bool is_class_type = std::meta::is_class_type(type_info);
+    // static constexpr bool is_function_type = std::meta::is_function_type(type_info);
+    // static constexpr bool is_reflection_type = std::meta::is_reflection_type(type_info);
+    // static constexpr bool is_reference_type = std::meta::is_reference_type(type_info);
+    // static constexpr bool is_arithmetic_type = std::meta::is_arithmetic_type(type_info);
+    // static constexpr bool is_fundamental_type = std::meta::is_fundamental_type(type_info);
+    // static constexpr bool is_object_type = std::meta::is_object_type(type_info);
+    // static constexpr bool is_scalar_type = std::meta::is_scalar_type(type_info);
+    // static constexpr bool is_compound_type = std::meta::is_compound_type(type_info);
+    // static constexpr bool is_member_pointer_type = std::meta::is_member_pointer_type(type_info);
+    // static constexpr bool is_const_type = std::meta::is_const_type(type_info);
+    // static constexpr bool is_volatile_type = std::meta::is_volatile_type(type_info);
+    // static constexpr bool is_trivially_copyable_type = std::meta::is_trivially_copyable_type(type_info);
+    // // static constexpr bool is_trivially_relocatable_type = std::meta::is_trivially_relocatable_type(type_info);
+    // // static constexpr bool is_replaceable_type = std::meta::is_replaceable_type(type_info);
+    // static constexpr bool is_standard_layout_type = std::meta::is_standard_layout_type(type_info);
+    // static constexpr bool is_empty_type = std::meta::is_empty_type(type_info);
+    // static constexpr bool is_polymorphic_type = std::meta::is_polymorphic_type(type_info);
+    // static constexpr bool is_abstract_type = std::meta::is_abstract_type(type_info);
+    // static constexpr bool is_final_type = std::meta::is_final_type(type_info);
+    // static constexpr bool is_aggregate_type = std::meta::is_aggregate_type(type_info);
+    // // static constexpr bool is_consteval_only_type = std::meta::is_consteval_only_type(type_info);
+    // static constexpr bool is_signed_type = std::meta::is_signed_type(type_info);
+    // static constexpr bool is_unsigned_type = std::meta::is_unsigned_type(type_info);
+    // static constexpr bool is_bounded_array_type = std::meta::is_bounded_array_type(type_info);
+    // static constexpr bool is_unbounded_array_type = std::meta::is_unbounded_array_type(type_info);
+    // static constexpr bool is_scoped_enum_type = std::meta::is_scoped_enum_type(type_info);
+    // static constexpr bool is_default_constructible_type = std::meta::is_default_constructible_type(type_info);
+    // static constexpr bool is_copy_constructible_type = std::meta::is_copy_constructible_type(type_info);
+    // static constexpr bool is_move_constructible_type = std::meta::is_move_constructible_type(type_info);
+    // static constexpr bool is_copy_assignable_type = std::meta::is_copy_assignable_type(type_info);
+    // static constexpr bool is_move_assignable_type = std::meta::is_move_assignable_type(type_info);
+    // static constexpr bool is_swappable_type = std::meta::is_swappable_type(type_info);
+    // static constexpr bool is_destructible_type = std::meta::is_destructible_type(type_info);
+    // static constexpr bool is_trivially_default_constructible_type = std::meta::is_trivially_default_constructible_type(type_info);
+    // static constexpr bool is_trivially_copy_constructible_type = std::meta::is_trivially_copy_constructible_type(type_info);
+    // static constexpr bool is_trivially_move_constructible_type = std::meta::is_trivially_move_constructible_type(type_info);
+    // static constexpr bool is_trivially_copy_assignable_type = std::meta::is_trivially_copy_assignable_type(type_info);
+    // static constexpr bool is_trivially_move_assignable_type = std::meta::is_trivially_move_assignable_type(type_info);
+    // static constexpr bool is_trivially_destructible_type = std::meta::is_trivially_destructible_type(type_info);
+    // static constexpr bool is_nothrow_default_constructible_type = std::meta::is_nothrow_default_constructible_type(type_info);
+    // static constexpr bool is_nothrow_copy_constructible_type = std::meta::is_nothrow_copy_constructible_type(type_info);
+    // static constexpr bool is_nothrow_move_constructible_type = std::meta::is_nothrow_move_constructible_type(type_info);
+    // static constexpr bool is_nothrow_copy_assignable_type = std::meta::is_nothrow_copy_assignable_type(type_info);
+    // static constexpr bool is_nothrow_move_assignable_type = std::meta::is_nothrow_move_assignable_type(type_info);
+    // static constexpr bool is_nothrow_swappable_type = std::meta::is_nothrow_swappable_type(type_info);
+    // static constexpr bool is_nothrow_destructible_type = std::meta::is_nothrow_destructible_type(type_info);
+    // // static constexpr bool is_nothrow_relocatable_type = std::meta::is_nothrow_relocatable_type(type_info);
+    // static constexpr bool is_implicit_lifetime_type = std::meta::is_implicit_lifetime_type(type_info);
+    // static constexpr bool has_virtual_destructor = std::meta::has_virtual_destructor(type_info);
+    // static constexpr bool has_unique_object_representations = std::meta::has_unique_object_representations(type_info);
 };
 
 
