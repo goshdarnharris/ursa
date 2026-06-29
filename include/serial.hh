@@ -9,7 +9,12 @@ namespace ursa {
 // template <typename word_t>
 struct serial {
     //how to parameterize the span type?
-    static void write(auto&&, std::span<uint8_t const> data);
+    static void write(auto&& v, std::span<uint8_t const> data)
+    {
+        constexpr auto customization = customize::find_customizations<>(^^write, std::forward<decltype(v)>(v), std::forward<decltype(data)>(data));
+        return [:customization:](std::forward<decltype(v)>(v), data);
+    }
+
     static void read_into(auto&& v, std::span<uint8_t>& buffer)
     {
         //default implementation loops over single byte reads
@@ -23,8 +28,11 @@ struct serial {
     //FIXME: not sure how to handle cases where the
     //customization is also templated; I think the template
     //must be instantiated in order to get at its annotations
-    // template <size_t N>
-    // static std::array<uint8_t,N> read(auto&&);
+    template <size_t N>
+    static std::array<uint8_t,N> read(auto&& v);
+    // {
+    //     return customize::invoke<^^N>(^^read<N>, std::forward<decltype(v)>(v));
+    // }
 
 };
 

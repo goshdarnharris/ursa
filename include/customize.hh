@@ -45,5 +45,63 @@ inline consteval auto opt_in()
     return customization<I,T>{};
 }
 
+// inline consteval auto instantiate_template_customization(std::meta::info customization_template, std::meta::info instance,
+//     std::vector<std::meta::info> explicit_template_args, std::vector<std::meta::info> function_args)
+// {
+//     return std::meta
+// }
+
+template <auto... Params>
+inline consteval bool check_customization(std::meta::info cpo_info, std::meta::info instance_type_info, std::meta::info customization_info, auto&&... args)
+{
+    std::vector<std::meta::info> annotations;
+    // constexpr_print(FMT_COMPILE("Checking customization: {}"), std::meta::display_string_of(customization_info));
+    if(std::meta::is_function_template(customization_info) and std::meta::can_substitute(customization_info, {Params..., instance_type_info})) {
+        auto instantiated_template = std::meta::substitute(customization_info, {Params..., instance_type_info});
+        annotations = std::meta::annotations_of(instantiated_template);
+    } else if(std::meta::is_function(customization_info)) {
+        if(sizeof...(Params) > 0) {
+            //if the customization is a function, but the user has provided template parameters, then this is not a match.
+            return false;
+        }
+        annotations = std::meta::annotations_of(customization_info);
+    } else {
+        return false;
+    }
+
+    for(auto annotation : annotations) {
+        if(std::meta::extract<std::meta::info>(annotation) == cpo_info) {
+            return true;
+        }
+    }
+    return false;
+}
+
+template <auto... Params>
+inline consteval auto find_customizations(std::meta::info cpo_info, auto&& instance, auto&&... args)
+{
+    auto instance_info = std::meta::remove_cvref(std::meta::type_of(^^instance));
+    auto customization_scope = std::meta::parent_of(instance_info);
+
+    // constexpr_print(FMT_COMPILE("Looking for customizations for CPO {} with instance {} in scope: {}"), 
+    //     std::meta::display_string_of(cpo_info), 
+    //     std::meta::display_string_of(instance_info),
+    //     std::meta::display_string_of(customization_scope)
+    // );
+
+    for(auto customization_member : std::meta::members_of(customization_scope, std::meta::access_context::unchecked())) {
+        if(check_customization<Params...>(cpo_info, instance_info, customization_member, std::forward<decltype(args)>(args)...)) {
+            return customization_member;
+        }
+    }
+    return ^^void;
+}
+
+template <auto cpo, auto... Params>
+inline constexpr decltype(auto) invoke(auto&& instance, auto&&... args)
+{
+    constexpr auto customization = customize::find_customizations<Params...>(cpo, std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
+    return [:customization:](std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
+}
 
 } //namespace customize
