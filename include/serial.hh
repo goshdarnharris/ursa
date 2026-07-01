@@ -9,11 +9,7 @@ namespace ursa {
 // template <typename word_t>
 struct serial {
     //how to parameterize the span type?
-    static void write(auto&& v, std::span<uint8_t const> data)
-    {
-        constexpr auto customization = customize::find_customizations<>(^^write, std::forward<decltype(v)>(v), std::forward<decltype(data)>(data));
-        return [:customization:](std::forward<decltype(v)>(v), data);
-    }
+    static void write(auto&& v, std::span<uint8_t const> data);
 
     static void read_into(auto&& v, std::span<uint8_t>& buffer)
     {
