@@ -10,7 +10,7 @@ struct my_serial {
 
 [[=^^ursa::serial::write]] void my_wacky_write(my_serial&, std::span<uint8_t const> data)
 {
-    fmt::println("my_serial::write called with data");
+    fmt::println("my_serial::write called with data of {} bytes", data.size());
 }
 
 // //FIXME: how to opt into using the default?
@@ -18,7 +18,7 @@ struct my_serial {
 // // [[=^^ursa::serial::read_into]] constexpr auto read_into = customize::dfault;
 
 template <size_t N>
-[[=^^ursa::serial::read<N>]] std::array<uint8_t,N> read(my_serial&) 
+[[=^^ursa::serial::read]] std::array<uint8_t,N> read(my_serial&) 
 { 
     fmt::println("my_serial::read<{}> called", N);
     return {}; 
@@ -42,6 +42,6 @@ static_assert(ursa::customize::find_customizations<>(^^ursa::serial::write, my_s
 int main() 
 {
     auto s = my_stuff::my_serial{};
-    ursa::customize::invoke<^^ursa::serial::write>(s, std::span<uint8_t const>{});
+    ursa::serial_interface.write(s, std::span<uint8_t const>{});
     return 0;
 }

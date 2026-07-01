@@ -36,6 +36,8 @@ struct serial {
 
 };
 
+inline constexpr auto serial_interface = customize::interface<serial>{};
+
 } //namespace ursa
 
 

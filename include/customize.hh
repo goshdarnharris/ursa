@@ -71,6 +71,14 @@ inline consteval bool check_customization(std::meta::info cpo_info, std::meta::i
 
     for(auto annotation : annotations) {
         if(std::meta::extract<std::meta::info>(annotation) == cpo_info) {
+
+            
+            //FIXME needs more constraint checking
+            // - number of arguments
+            // - argument types
+            // - return type
+            // - template parameters - if the cpo is a template the customization must be as well (number, kind, etc)
+
             return true;
         }
     }
@@ -97,11 +105,66 @@ inline consteval auto find_customizations(std::meta::info cpo_info, auto&& insta
     return ^^void;
 }
 
-template <auto cpo, auto... Params>
+template <auto cpo>
 inline constexpr decltype(auto) invoke(auto&& instance, auto&&... args)
 {
-    constexpr auto customization = customize::find_customizations<Params...>(cpo, std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
+    constexpr auto customization = find_customizations<>(cpo, std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
     return [:customization:](std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
 }
+
+
+template <auto cpo_info>
+struct customization_point {
+    constexpr decltype(auto) operator()(auto&& instance, auto&&... args) const
+    {
+        constexpr auto customization = find_customizations<>(cpo_info, std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
+        return [:customization:](std::forward<decltype(instance)>(instance), std::forward<decltype(args)>(args)...);
+    }
+};
+
+// inline consteval void define_interface(std::meta::info interface_info, std)
+// {
+    
+// }
+
+template <typename T>
+struct interface_definition {
+    struct interface;
+
+    consteval {
+        auto interface_info = ^^T;
+        std::vector<std::meta::info> interface_members;
+        for(auto interface_member : std::meta::members_of(interface_info, std::meta::access_context::unchecked())) {
+            if(std::meta::is_special_member_function(interface_member) and not std::meta::is_user_declared(interface_member)) {
+                //skip compiler-generated special member functions; 
+                //if it's a customization point it must be user-declared.
+                continue;
+            }
+            if(std::meta::is_function_template(interface_member)) {
+                //FIXME: once we can define templated members, we can support customization points with explicit templates
+                //FIXME: once we can define static members, we can make these static for interface::function style access
+                //       instead of interface.function
+
+                auto cpo = std::meta::substitute(^^customization_point, {std::meta::reflect_constant(interface_member)});
+                interface_members.push_back(std::meta::data_member_spec(cpo, {
+                    .name = std::meta::identifier_of(interface_member),
+                    .no_unique_address = true
+                }));
+            }
+            if(std::meta::is_function(interface_member)) {
+                auto cpo = std::meta::substitute(^^customization_point, {std::meta::reflect_constant(interface_member)});
+                interface_members.push_back(std::meta::data_member_spec(cpo, {
+                    .name = std::meta::identifier_of(interface_member),
+                    .no_unique_address = true
+                }));
+            }
+        }
+
+        std::meta::define_aggregate(^^interface, interface_members);
+    }
+};
+
+template <typename T>
+using interface = typename interface_definition<T>::interface;
 
 } //namespace customize
