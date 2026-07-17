@@ -1,10 +1,28 @@
 location: packages
 sources:
-  - repo: "https://github.com/fmtlib/fmt.git"
+  - repo: https://github.com/goshdarnharris/fmt.git
     name: fmt
-    rev: 12.2.0
+    rev: 12.2.1-luminaire
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
 sources_locked:
-  - 
+  - repo: https://github.com/goshdarnharris/fmt.git
+    name: fmt
+    rev: 5669827d3123618be822b8bf609b69b3cd3f7913
+    type: git
+    params:
+    sparse_paths:
+      -
+    links:
+      -
+    scripts:
+      -
 default_group: ''
 groups:
   -
